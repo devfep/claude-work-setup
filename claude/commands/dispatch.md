@@ -7,10 +7,12 @@ Dispatch the next task of programme `$ARGUMENTS` (or a named task: `$ARGUMENTS` 
 2. Confirm capacity: no implementer lane live (`ListAgents`), no test suite running
    (`pgrep -f 'vitest|pytest|mvn|gradle|terraform'` empty).
 3. Verification skill freshness: if the task's repo has `~/.claude/skills/verify-<repo>/` and its
-   `features/README.md` is older than seven days (`find -mtime +7`), run
-   `/maintain-verification-skill` for that repo first and commit its corrections to the workflow
-   repo. If the repo has an app surface and no verify skill yet, the first task for that repo is
-   `/create-verification-skill`, output placed under `projects/<repo>/skills/verify-<repo>/` in
+   `features/README.md` is older than seven days (`find -mtime +7`), refresh it
+   first (`/maintain-verification-skill` if installed; otherwise re-walk every feature-map file
+   against the running app and correct it) and commit the corrections to the workflow repo. If
+   the repo has an app surface and no verify skill yet, the first task for that repo is to write
+   one (`/create-verification-skill` if installed; otherwise by hand from
+   `protocol/templates/verify-skill/`), placed under `projects/<repo>/skills/verify-<repo>/` in
    the workflow repo, then `bootstrap.sh` to link it.
 4. Create the lane's worktree: in the task's repo checkout, `git fetch origin && git worktree add
    <checkout>/.worktrees/<jira> -b feature/<JIRA>-<slug> origin/develop` (or the base branch the

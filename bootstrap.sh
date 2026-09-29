@@ -56,6 +56,14 @@ case "${WORKSPACE_MODE:-interactive}" in
   *) mode=acceptEdits ;;
 esac
 rendered=$(sed "s#__DEFAULT_MODE__#$mode#g" "$SETUP_DIR/claude/settings.json.tmpl")
+# Firm-side additions (internal marketplace, approved plugins, extra allow rules) are merged
+# from settings.firm.json beside the overlay; the generic template never fetches from outside.
+firm="$CLAUDE_DIR/settings.firm.json"
+if [[ -f "$firm" ]]; then
+  jq -e . "$firm" >/dev/null || { echo "error: $firm is not valid JSON"; exit 1; }
+  rendered=$(jq -s '.[0] * .[1]' <(printf '%s' "$rendered") "$firm")
+  echo "settings: merged $firm"
+fi
 jq -e . <<<"$rendered" >/dev/null
 if [[ -f "$CLAUDE_DIR/settings.json" && ! -f "$CLAUDE_DIR/settings.json.pre-bootstrap" ]] \
   && ! grep -q '"hooks"' "$CLAUDE_DIR/settings.json"; then

@@ -57,6 +57,18 @@ if [[ "$before" != "$after" ]]; then
 fi
 [[ $(grep -c '^export PATH=' "$ebs/.shellrc") == 1 ]] || fail "PATH line duplicated"
 
+# firm additions merge into the rendered settings
+firm_json='{"enabledPlugins":{"x@internal":true},'
+firm_json+='"extraKnownMarketplaces":{"internal":'
+firm_json+='{"source":{"source":"git","url":"http://x/internal.git"}}}}'
+printf '%s\n' "$firm_json" >"$ebs/.claude/settings.firm.json"
+run
+jq -e '.enabledPlugins["x@internal"] == true
+  and .extraKnownMarketplaces.internal.source.url == "http://x/internal.git"
+  and .permissions.defaultMode == "acceptEdits"' "$ebs/.claude/settings.json" >/dev/null \
+  || fail "settings.firm.json not merged"
+mv "$ebs/.claude/settings.firm.json" "$ebs/.claude/settings.firm.json.used"
+
 # unattended mode renders bypassPermissions
 sed -i.bak 's/^WORKSPACE_MODE=.*/WORKSPACE_MODE=unattended/' "$c/overlay.env"
 run

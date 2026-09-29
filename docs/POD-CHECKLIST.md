@@ -17,9 +17,11 @@ Type each line by hand in the pod; the expected result is after the arrow.
     `~/ebs/tools/bin/rtk` exists. After a workspace rebuild, run `rustup-init` again first.
 4. `source ~/ebs/.shellrc && uv --version && prek --version && shellcheck --version | head -2 &&
    cdp doctor` → versions print; doctor shows Chrome.
-5. `DEVSPACE_CLAUDE_LAUNCH=1 /usr/local/libexec/claude-real plugin list` → superpowers,
-   modern-python, gh-cli, pstack installed (first launch installs them; if the list is empty,
-   start one session and retry).
+5. Plugins come only from the firm's internal marketplace. Declare it and the approved plugins in
+   `~/ebs/.claude/settings.firm.json` (same keys as settings.json: `extraKnownMarketplaces`,
+   `enabledPlugins`), re-run bootstrap, start a session, then
+   `DEVSPACE_CLAUDE_LAUNCH=1 /usr/local/libexec/claude-real plugin list` shows them. Skills that
+   exist only on public GitHub go through the firm's contribution process first.
 6. In a session: `echo hi` via Bash → runs; `rm -rf /tmp/x` → BLOCKED; `git push origin develop`
    in a team repo → BLOCKED; `git commit -m "no key"` in a team repo → BLOCKED. This proves hooks
    run under the policy helper.
@@ -30,7 +32,8 @@ Type each line by hand in the pod; the expected result is after the arrow.
    `gh pr list --repo <org>/<repo> --limit 1` → works.
 9. `uv tool list` and `ls ~/ebs/tools/npm/bin` → confirm tflint/stryker/mutmut presence; record
    absences in the protocol's § 3.3 note in the fork.
-10. In a session inside an app repo: `/create-verification-skill`, then move the output to
+10. In a session inside an app repo: write the verify skill (`/create-verification-skill` if the
+    internal marketplace provides it, else by hand from `protocol/templates/verify-skill/`), put it at
     `~/ebs/projects/claude-work-setup/projects/<repo>/skills/verify-<repo>/` and re-run
     bootstrap → the skill appears in `/skills`.
 11. Fork: `git remote rename origin generic && git remote add origin

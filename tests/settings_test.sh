@@ -18,17 +18,9 @@ for hook in $hooks; do
 done
 if grep -q 'osascript' <<<"$out"; then fail "macOS notification left in"; fi
 if grep -qE 'Library/|\.claude-alt' <<<"$out"; then fail "Mac-only path left in"; fi
-plugins='superpowers@superpowers-marketplace modern-python@trailofbits gh-cli@trailofbits
-  pstack@pstack-claude'
-for p in $plugins; do
-  enabled=$(jq -r --arg p "$p" '.enabledPlugins[$p]' <<<"$out")
-  [[ "$enabled" == "true" ]] || fail "plugin $p not enabled"
-done
-while read -r name repo; do
-  got=$(jq -r --arg n "$name" '.extraKnownMarketplaces[$n].source.repo' <<<"$out")
-  [[ "$got" == "$repo" ]] || fail "marketplace $name source missing"
-done <<'EOF'
-superpowers-marketplace obra/superpowers-marketplace
-trailofbits trailofbits/skills
-pstack-claude hadifarnoud/pstack-claude
-EOF
+# Plugins and marketplaces are a firm-side decision (settings.firm.json), never fetched from
+# outside by the generic template.
+if jq -e '.extraKnownMarketplaces // .enabledPlugins' <<<"$out" >/dev/null 2>&1; then
+  fail "template must not declare marketplaces or plugins"
+fi
+if grep -qE '"source": *"github"' <<<"$out"; then fail "external marketplace source left in"; fi

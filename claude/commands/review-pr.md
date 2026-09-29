@@ -138,7 +138,7 @@ rather than failing the pipeline.
 
 - Commit the fixes as a separate commit (do not squash into the
   original — preserve review history)
-- Write the message with the `technical-writing` skill:
+- Write the message plainly (use the `technical-writing` skill if installed):
   - Subject: `<JIRA-KEY> Resolve code review findings for PR #$PR_NUMBER`,
     with the JIRA key taken from the branch name
   - Body: findings by severity, what was fixed vs dismissed (with
@@ -151,7 +151,7 @@ rather than failing the pipeline.
 
 ## 5. PR comment
 
-Write the review summary with the `technical-writing` skill and post
+Write the review summary in plain sentences (the `technical-writing` skill if installed) and post
 it as a PR comment using `gh pr comment $PR_NUMBER --repo <owner/name>`.
 
 Format the comment body as:

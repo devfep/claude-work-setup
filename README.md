@@ -46,9 +46,9 @@ every workspace rebuild. `docs/POD-CHECKLIST.md` is the first-run checklist.
   `protocol/templates/CLAUDE.local.<stack>.md`, named exactly like the checkout under
   `PROJECTS_DIR`, and re-run bootstrap. It links the file into the checkout and adds it to
   `.git/info/exclude`.
-- **Verify skill:** run `/create-verification-skill` inside the app repo, move the output to
-  `projects/<repo>/skills/verify-<repo>/`, and re-run bootstrap to link it into
-  `~/ebs/.claude/skills/`. `protocol/templates/verify-skill/` shows the expected shape.
+- **Verify skill:** write `projects/<repo>/skills/verify-<repo>/` (shape in
+  `protocol/templates/verify-skill/`, or a generator from your approved marketplace) and re-run
+  bootstrap to link it into `~/ebs/.claude/skills/`.
 - **Programme:** copy `protocol/templates/` into `programmes/<name>/` (PLAN.md, ROADMAP.md,
   SESSION-RESUME.md, BOARD.json) and add `contracts/` and `verify/` as tasks need them.
 
@@ -62,12 +62,11 @@ jq, git, shellcheck and Node 22.
 
 ## Attribution
 
-- [superpowers](https://github.com/obra/superpowers-marketplace) by Jesse Vincent (MIT),
-  installed as a plugin.
-- [pstack](https://github.com/cursor/plugins) by Lauren Tan (MIT), installed through the Claude
-  Code port [pstack-claude](https://github.com/hadifarnoud/pstack-claude) (MIT); its
-  `technical-writing` and verification-skill workflows are cited throughout the protocol.
 - [humanizer](https://github.com/blader/humanizer) by Siqi Chen (MIT), vendored in
   `claude/skills/humanizer/` with its LICENSE.
-- `modern-python` and `gh-cli` from [Trail of Bits skills](https://github.com/trailofbits/skills)
-  (CC-BY-SA-4.0), installed as plugins.
+
+Plugins are never fetched from public marketplaces by this setup. The verification-skill and
+technical-writing ideas in the protocol come from [pstack](https://github.com/cursor/plugins)
+by Lauren Tan (MIT); [superpowers](https://github.com/obra/superpowers-marketplace) and the
+[Trail of Bits skills](https://github.com/trailofbits/skills) are worth requesting through an
+internal marketplace. Declare whatever is approved in `~/ebs/.claude/settings.firm.json`.

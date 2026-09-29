@@ -217,8 +217,8 @@ All scripts start with `set -euo pipefail`. Lint: `shellcheck script.sh && shfmt
 - Never push directly to main — use feature branches and PRs
 - Never commit secrets, API keys, or credentials — use `.env` files (gitignored) and environment
   variables
-- Write the message with the `technical-writing` skill: subject = JIRA key + what changed,
-  body = why, in plain sentences.
+- Subject = JIRA key + what changed; body = why, in plain sentences. Use the
+  `technical-writing` skill when the firm's marketplace provides it.
 
 **Hooks and worktrees:**
 - Where a repo has a `.pre-commit-config.yaml`, run `prek install` once and `prek run` before
@@ -234,5 +234,5 @@ Only describe what's in the diff.
 Use plain, factual language. A bug fix is a bug fix, not a "critical stability improvement."
 Avoid: critical, crucial, essential, significant, comprehensive, robust, elegant.
 
-Write the body with the `technical-writing` skill: the Done line, the gate summary with evidence
-path, and what a reviewer should look at first.
+The body carries the Done line, the gate summary with evidence path, and what a reviewer should
+look at first, in plain sentences (the `technical-writing` skill, when installed, sets the bar).

@@ -8,7 +8,7 @@ Felix is about to clear the context or step away. Programme: `$ARGUMENTS` (a fol
    stage), open PRs awaiting the team, in-flight background jobs with their log paths,
    **Pending from Felix** (questions only he can answer, each with what is blocked on it),
    standing rules, numbered next actions. Rewrite, never append; history goes under `## Log`.
-   Write it with the `technical-writing` skill: plain sentences, exact names, no filler.
+   Plain sentences, exact names, no filler (the `technical-writing` skill, if installed).
 2. Update `programmes/$ARGUMENTS/BOARD.json` to match.
 3. In the workflow repo: `git add programmes/$ARGUMENTS && git commit -m "Checkpoint $ARGUMENTS"`
    and push its branch. Nothing else is committed.
