@@ -1,0 +1,11 @@
+{
+  "as_of": "",
+  "programme": "",
+  "status": {"done": 0, "total": 0, "blocked": 0},
+  "capacity": {"lanes_live": 0, "lanes_max": 1, "suites_in_flight": 0, "suites_max": 1},
+  "lanes": [],
+  "queue": [],
+  "open_prs": [],
+  "pending_felix": [],
+  "closed": []
+}
