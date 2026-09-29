@@ -105,7 +105,8 @@ install_tools() {
   done
   for t in oxlint oxfmt; do
     if ! err=$(npm install -g --prefix "$PERSIST_DIR/tools/npm" "$t" 2>&1); then
-      echo "warn: could not install $t: $(grep -m1 -E 'ERR!|error' <<<"$err" || tail -1 <<<"$err")"
+      err=$(grep -m1 -E 'ERR!|error' <<<"$err" || tail -1 <<<"$err")
+      echo "warn: could not install $t: $err"
     fi
   done
   local restore="$PERSIST_DIR/tools/restore-workspace-tooling.sh"
