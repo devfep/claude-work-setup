@@ -71,6 +71,10 @@ touch "$PERSIST_DIR/.shellrc"
 # shellcheck disable=SC2016  # $HOME and $PATH expand when .shellrc is sourced, not now
 path_line='export PATH="$HOME/ebs/tools/bin:$HOME/ebs/tools/npm/bin:$PATH"'
 append_once "$PERSIST_DIR/.shellrc" "$path_line"
+# Interactive uv (and uv inside Claude sessions) must see the same tool dir, index and CA.
+# shellcheck disable=SC2016  # expands when sourced
+uv_line='export UV_TOOL_DIR="$HOME/ebs/tools/uv-tools" UV_TOOL_BIN_DIR="$HOME/ebs/tools/bin"'
+append_once "$PERSIST_DIR/.shellrc" "$uv_line"
 
 install_tools() {
   mkdir -p "$PERSIST_DIR/tools/npm"
@@ -90,6 +94,7 @@ install_tools() {
   if [[ -n "${PYPI_INDEX_URL:-}" ]]; then
     export UV_DEFAULT_INDEX="$PYPI_INDEX_URL" UV_INDEX_URL="$PYPI_INDEX_URL"
     echo "uv index: $PYPI_INDEX_URL"
+    append_once "$PERSIST_DIR/.shellrc" "export UV_DEFAULT_INDEX=\"$PYPI_INDEX_URL\""
   else
     echo "warn: no PyPI index known (overlay PYPI_INDEX_URL empty, pip config has none)"
   fi
@@ -97,6 +102,7 @@ install_tools() {
         && -f "$NODE_EXTRA_CA_CERTS" ]]; then
     export SSL_CERT_FILE="$NODE_EXTRA_CA_CERTS"
     echo "uv CA: $SSL_CERT_FILE"
+    append_once "$PERSIST_DIR/.shellrc" "export SSL_CERT_FILE=\"$NODE_EXTRA_CA_CERTS\""
   fi
   local t err
   for t in prek ruff ty sqlfluff shellcheck-py shfmt-py ast-grep-cli mutmut; do
