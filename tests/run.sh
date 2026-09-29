@@ -15,7 +15,7 @@ for s in "${scripts[@]}"; do
 done
 nested=$(find "$ROOT" -mindepth 2 -name .git -not -path "$ROOT/.git/*")
 if [[ -n "$nested" ]]; then echo "FAIL embedded git repository: $nested"; fail=1; fi
-long=$(awk 'length > 100 { print FILENAME ":" FNR }' "${scripts[@]}")
+long=$(awk 'length > 100 { print FILENAME ":" FNR }' "${scripts[@]}" "$ROOT"/tools/*.mjs)
 if [[ -z "$long" ]]; then
   echo "PASS line length"
 else
