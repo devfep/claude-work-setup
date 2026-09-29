@@ -111,6 +111,7 @@ install_tools() {
     fi
   done
   for t in oxlint oxfmt; do
+    if [[ -x "$PERSIST_DIR/tools/npm/bin/$t" ]]; then continue; fi
     if ! err=$(npm install -g --prefix "$PERSIST_DIR/tools/npm" "$t" 2>&1); then
       err=$(grep -m1 -E 'ERR!|error' <<<"$err" || tail -1 <<<"$err")
       echo "warn: could not install $t: $err"
@@ -119,7 +120,12 @@ install_tools() {
   if [[ -n "${RTK_VENDORED_REPO:-}" && ! -x "$BIN/rtk" ]]; then
     if command -v cargo >/dev/null; then
       local src="$PERSIST_DIR/tools/src/rtk-vendored"
-      if [[ ! -d "$src/.git" ]]; then git clone -q "$RTK_VENDORED_REPO" "$src"; fi
+      if [[ -d "$src/.git" ]]; then
+        git -C "$src" pull -q --ff-only \
+          || echo "warn: could not update $src; building what is there"
+      else
+        git clone -q "$RTK_VENDORED_REPO" "$src"
+      fi
       echo "rtk: building offline from $src (one-time, several minutes on two CPUs)"
       if (cd "$src" && cargo build --release --offline --locked >"$src/build.log" 2>&1); then
         install -m 755 "$src/target/release/rtk" "$BIN/rtk"
