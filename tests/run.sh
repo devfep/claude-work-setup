@@ -13,6 +13,8 @@ shellcheck -S warning "${scripts[@]}" && echo "PASS shellcheck (${#scripts[@]} s
 for s in "${scripts[@]}"; do
   [[ -x "$s" || "$s" == */lib.sh ]] || { echo "FAIL not executable: $s"; fail=1; }
 done
+nested=$(find "$ROOT" -mindepth 2 -name .git -not -path "$ROOT/.git/*")
+if [[ -n "$nested" ]]; then echo "FAIL embedded git repository: $nested"; fail=1; fi
 long=$(awk 'length > 100 { print FILENAME ":" FNR }' "${scripts[@]}")
 if [[ -z "$long" ]]; then
   echo "PASS line length"
