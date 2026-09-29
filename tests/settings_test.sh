@@ -10,6 +10,8 @@ done
 out=$(sed "s#__DEFAULT_MODE__#acceptEdits#g" "$tmpl")
 hooks='block-rm-rf block-protected-push require-jira-prefix block-local-only
   enforce-package-manager protect-files teams-notify'
+grep -q "exec rtk hook claude; exit 0" <<<"$out" \
+  || { echo "  rtk hook not wired as a no-op when absent" >&2; exit 1; }
 for hook in $hooks; do
   grep -q "hooks/$hook.sh" <<<"$out" || fail "hook $hook not wired"
   [[ -x "$ROOT/claude/hooks/$hook.sh" ]] || fail "wired hook $hook.sh does not exist"

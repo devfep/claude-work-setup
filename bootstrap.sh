@@ -116,6 +116,23 @@ install_tools() {
       echo "warn: could not install $t: $err"
     fi
   done
+  if [[ -n "${RTK_VENDORED_REPO:-}" && ! -x "$BIN/rtk" ]]; then
+    if command -v cargo >/dev/null; then
+      local src="$PERSIST_DIR/tools/src/rtk-vendored"
+      if [[ ! -d "$src/.git" ]]; then git clone -q "$RTK_VENDORED_REPO" "$src"; fi
+      echo "rtk: building offline from $src (one-time, several minutes on two CPUs)"
+      if (cd "$src" && cargo build --release --offline --locked >"$src/build.log" 2>&1); then
+        install -m 755 "$src/target/release/rtk" "$BIN/rtk"
+        echo "rtk: $("$BIN/rtk" --version)"
+      else
+        err=$(grep -m1 -E '^error' "$src/build.log" || tail -1 "$src/build.log")
+        echo "warn: rtk build failed: $err"
+      fi
+    else
+      echo "warn: RTK_VENDORED_REPO is set but cargo is not on PATH" \
+        "(activate rust via toolchain, then re-run)"
+    fi
+  fi
   local restore="$PERSIST_DIR/tools/restore-workspace-tooling.sh"
   if [[ -x "$restore" ]]; then
     step "user restore script"

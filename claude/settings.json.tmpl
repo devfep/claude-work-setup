@@ -52,7 +52,8 @@
           { "type": "command", "command": "~/.claude/hooks/block-protected-push.sh" },
           { "type": "command", "command": "~/.claude/hooks/require-jira-prefix.sh" },
           { "type": "command", "command": "~/.claude/hooks/block-local-only.sh" },
-          { "type": "command", "command": "~/.claude/hooks/enforce-package-manager.sh" }
+          { "type": "command", "command": "~/.claude/hooks/enforce-package-manager.sh" },
+          { "type": "command", "command": "command -v rtk >/dev/null 2>&1 && exec rtk hook claude; exit 0" }
         ]
       },
       {

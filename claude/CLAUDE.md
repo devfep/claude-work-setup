@@ -121,6 +121,14 @@ When adding dependencies or tool versions, check what the internal mirror serves
 | `gh` | GitHub Enterprise (`GH_HOST` is set from the overlay) |
 | `cdp` | drive the browser sidecar: `cdp doctor`, `cdp new <url>`, `cdp screenshot out.png` |
 
+### Command output (when `rtk` is installed)
+
+`rtk` condenses command output to save tokens, keeping every signal and dropping costly noise.
+Treat condensed output as the complete result: run commands normally and batch related commands
+into one call. Truncated results state their recovery path in their own output. Re-run a command
+as `rtk proxy <cmd>` only when its result is unusable: empty when output was clearly expected,
+contradicting its exit code, or garbled. If `rtk` is not on PATH, output is unfiltered.
+
 Prefer `ast-grep` over ripgrep when searching for code structure. There is no `trash`; move files
 aside with `mv` into a scratch directory instead of deleting.
 
