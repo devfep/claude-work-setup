@@ -82,14 +82,31 @@ install_tools() {
     ln -sfn "$venv/bin/uv" "$BIN/uv"
   fi
   export UV_TOOL_BIN_DIR="$BIN" UV_TOOL_DIR="$PERSIST_DIR/tools/uv-tools"
-  if [[ -n "${PYPI_INDEX_URL:-}" ]]; then export UV_INDEX_URL="$PYPI_INDEX_URL"; fi
-  local t
+  # uv reads neither pip.conf nor the Node/Java trust settings: give it the same index and CA.
+  if [[ -z "${PYPI_INDEX_URL:-}" ]]; then
+    PYPI_INDEX_URL=$(pip config get global.index-url 2>/dev/null \
+      || pip3 config get global.index-url 2>/dev/null || true)
+  fi
+  if [[ -n "${PYPI_INDEX_URL:-}" ]]; then
+    export UV_DEFAULT_INDEX="$PYPI_INDEX_URL" UV_INDEX_URL="$PYPI_INDEX_URL"
+    echo "uv index: $PYPI_INDEX_URL"
+  else
+    echo "warn: no PyPI index known (overlay PYPI_INDEX_URL empty, pip config has none)"
+  fi
+  if [[ -z "${SSL_CERT_FILE:-}" && -n "${NODE_EXTRA_CA_CERTS:-}" && -f "$NODE_EXTRA_CA_CERTS" ]]; then
+    export SSL_CERT_FILE="$NODE_EXTRA_CA_CERTS"
+    echo "uv CA: $SSL_CERT_FILE"
+  fi
+  local t err
   for t in prek ruff ty sqlfluff shellcheck-py shfmt-py ast-grep-cli mutmut; do
-    uv tool install --quiet "$t" 2>/dev/null || echo "warn: could not install $t (not mirrored?)"
+    if ! err=$(uv tool install --quiet "$t" 2>&1); then
+      echo "warn: could not install $t: $(tail -1 <<<"$err")"
+    fi
   done
   for t in oxlint oxfmt; do
-    npm install -g --prefix "$PERSIST_DIR/tools/npm" "$t" >/dev/null 2>&1 \
-      || echo "warn: could not install $t (not mirrored?)"
+    if ! err=$(npm install -g --prefix "$PERSIST_DIR/tools/npm" "$t" 2>&1); then
+      echo "warn: could not install $t: $(grep -m1 -E 'ERR!|error' <<<"$err" || tail -1 <<<"$err")"
+    fi
   done
   local restore="$PERSIST_DIR/tools/restore-workspace-tooling.sh"
   if [[ -x "$restore" ]]; then
