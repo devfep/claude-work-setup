@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # PreToolUse(Bash): refuse `git push` to a protected branch, explicit or implied.
+# The workflow repo is exempt: it is a personal repo whose main branch carries programme state.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 CMD=$(jq -r '.tool_input.command // empty')
 [[ -z "$CMD" ]] && exit 0
 is_git_subcommand push "$CMD" || exit 0
+in_workflow_repo && exit 0
 PROTECTED="${PROTECTED_BRANCHES:-main master develop release}"
 
 # Explicit branch anywhere after `push`: not preceded by a name char, slash or dash

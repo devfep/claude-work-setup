@@ -2,6 +2,9 @@
 set -euo pipefail
 source "$ROOT/tests/lib.sh"
 h=block-protected-push.sh
+work=$(tmp_repo)
+git -C "$work" checkout -q -b feature/ABC-0-base
+cd "$work"   # outside the workflow repo, which is exempt
 assert_hook $h 2 "$(bash_json 'git push origin main')"
 assert_hook $h 2 "$(bash_json 'git push origin master')"
 assert_hook $h 2 "$(bash_json 'git push -u origin develop')"
@@ -31,6 +34,14 @@ git -C "$repo" checkout -q -b develop
 ( cd "$repo" && assert_hook $h 2 "$(bash_json 'git push -u origin')" 'push -u origin on develop' )
 git -C "$repo" checkout -q -b feature/ABC-3-thing
 ( cd "$repo" && assert_hook $h 0 "$(bash_json 'git push')" 'bare push on feature branch' )
+
+# the workflow repo (marker file) is exempt: its main branch carries programme state
+wf=$(tmp_repo)
+mkdir -p "$wf/.claude" && touch "$wf/.claude/workflow-repo"
+git -C "$wf" checkout -q -B main
+( cd "$wf" && assert_hook $h 0 "$(bash_json 'git push origin main')" 'workflow repo, explicit' )
+( cd "$wf" && assert_hook $h 0 "$(bash_json 'git push')" 'workflow repo, bare push on main' )
+( cd "$work" && assert_hook $h 2 "$(bash_json 'git push origin main')" 'team repo still blocked' )
 
 # overlay overrides the list
 ov=$(mktemp); echo "PROTECTED_BRANCHES='trunk'" >"$ov"
