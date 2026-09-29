@@ -131,6 +131,8 @@ step "projects"
 for p in "$SETUP_DIR"/projects/*/; do
   [[ -d "$p" ]] || continue
   name=$(basename "$p"); repo="$PROJECTS_DIR/$name"
+  # The workspace UI nests a project's checkout one level down: <name>/<name>/.git
+  if [[ ! -d "$repo/.git" && -d "$repo/$name/.git" ]]; then repo="$repo/$name"; fi
   if [[ ! -d "$repo/.git" ]]; then echo "skip: $repo is not a git checkout"; continue; fi
   if [[ -f "$p/CLAUDE.local.md" ]]; then link "${p}CLAUDE.local.md" "$repo/CLAUDE.local.md"; fi
   mkdir -p "$repo/.git/info"
