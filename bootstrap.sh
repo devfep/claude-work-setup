@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# Idempotent workspace bootstrap. Safe to re-run after every workspace rebuild.
+# Env overrides (mainly for tests): PERSIST_DIR, PROJECTS_DIR, SKIP_TOOLS=1.
+set -euo pipefail
+SETUP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PERSIST_DIR="${PERSIST_DIR:-$HOME/ebs}"
+CLAUDE_DIR="$PERSIST_DIR/.claude"
+OVERLAY="$CLAUDE_DIR/overlay.env"
+BIN="$PERSIST_DIR/tools/bin"
+
+step() { echo "== $*"; }
+link() {
+  local src=$1 dst=$2
+  if [[ -e "$dst" && ! -L "$dst" ]]; then
+    echo "keep: $dst exists and is not a symlink; move it aside and re-run to replace it"
+    return 0
+  fi
+  if [[ "$(readlink "$dst" 2>/dev/null || true)" == "$src" ]]; then return 0; fi
+  ln -sfn "$src" "$dst"
+  echo "link: $dst -> $src"
+}
+append_once() {
+  if ! grep -qxF -- "$2" "$1" 2>/dev/null; then echo "$2" >>"$1"; fi
+}
+
+step "overlay"
+mkdir -p "$CLAUDE_DIR"
+if [[ ! -f "$OVERLAY" ]]; then
+  cp "$SETUP_DIR/overlay.env.example" "$OVERLAY"
+  echo "seeded $OVERLAY from the example; edit it, then re-run"
+fi
+# shellcheck disable=SC1090  # runtime path by design
+source "$OVERLAY"
+PROJECTS_DIR="${PROJECTS_DIR:-$PERSIST_DIR/projects}"
+
+case "$SETUP_DIR" in
+  "$PERSIST_DIR"/*) ;;
+  *) echo "warning: $SETUP_DIR is outside $PERSIST_DIR and will not survive a workspace rebuild" ;;
+esac
+
+step "config links"
+link "$SETUP_DIR/claude/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+link "$SETUP_DIR/claude/hooks" "$CLAUDE_DIR/hooks"
+link "$SETUP_DIR/claude/commands" "$CLAUDE_DIR/commands"
+link "$SETUP_DIR/claude/statusline.sh" "$CLAUDE_DIR/statusline.sh"
+mkdir -p "$CLAUDE_DIR/skills" "$BIN"
+for s in "$SETUP_DIR"/claude/skills/*/ "$SETUP_DIR"/projects/*/skills/*/; do
+  [[ -d "$s" ]] || continue
+  link "${s%/}" "$CLAUDE_DIR/skills/$(basename "$s")"
+done
+link "$SETUP_DIR/tools/cdp.mjs" "$BIN/cdp"
+
+step "settings"
+case "${WORKSPACE_MODE:-interactive}" in
+  unattended) mode=bypassPermissions ;;
+  *) mode=acceptEdits ;;
+esac
+rendered=$(sed "s#__DEFAULT_MODE__#$mode#g" "$SETUP_DIR/claude/settings.json.tmpl")
+jq -e . <<<"$rendered" >/dev/null
+if [[ -f "$CLAUDE_DIR/settings.json" && ! -f "$CLAUDE_DIR/settings.json.pre-bootstrap" ]] \
+  && ! grep -q '"hooks"' "$CLAUDE_DIR/settings.json"; then
+  cp "$CLAUDE_DIR/settings.json" "$CLAUDE_DIR/settings.json.pre-bootstrap"
+fi
+if [[ "$(cat "$CLAUDE_DIR/settings.json" 2>/dev/null || true)" != "$rendered" ]]; then
+  printf '%s\n' "$rendered" >"$CLAUDE_DIR/settings.json"
+  echo "wrote settings.json (defaultMode=$mode)"
+fi
+
+step "shell PATH"
+touch "$PERSIST_DIR/.shellrc"
+# shellcheck disable=SC2016  # $HOME and $PATH expand when .shellrc is sourced, not now
+path_line='export PATH="$HOME/ebs/tools/bin:$HOME/ebs/tools/npm/bin:$PATH"'
+append_once "$PERSIST_DIR/.shellrc" "$path_line"
+
+install_tools() {
+  mkdir -p "$PERSIST_DIR/tools/npm"
+  export PATH="$BIN:$PATH"
+  if ! command -v uv >/dev/null; then
+    local venv="$PERSIST_DIR/tools/uv-venv"
+    if [[ ! -x "$venv/bin/pip" ]]; then python3 -m venv "$venv"; fi
+    "$venv/bin/pip" install --quiet ${PYPI_INDEX_URL:+--index-url "$PYPI_INDEX_URL"} uv
+    ln -sfn "$venv/bin/uv" "$BIN/uv"
+  fi
+  export UV_TOOL_BIN_DIR="$BIN" UV_TOOL_DIR="$PERSIST_DIR/tools/uv-tools"
+  if [[ -n "${PYPI_INDEX_URL:-}" ]]; then export UV_INDEX_URL="$PYPI_INDEX_URL"; fi
+  local t
+  for t in prek ruff ty sqlfluff shellcheck-py shfmt-py ast-grep-cli mutmut; do
+    uv tool install --quiet "$t" 2>/dev/null || echo "warn: could not install $t (not mirrored?)"
+  done
+  for t in oxlint oxfmt; do
+    npm install -g --prefix "$PERSIST_DIR/tools/npm" "$t" >/dev/null 2>&1 \
+      || echo "warn: could not install $t (not mirrored?)"
+  done
+  local restore="$PERSIST_DIR/tools/restore-workspace-tooling.sh"
+  if [[ -x "$restore" ]]; then
+    step "user restore script"
+    "$restore" || echo "warn: restore script exited non-zero"
+  fi
+}
+if [[ "${SKIP_TOOLS:-0}" != "1" ]]; then
+  step "tools (via internal mirrors)"
+  install_tools
+fi
+
+step "projects"
+for p in "$SETUP_DIR"/projects/*/; do
+  [[ -d "$p" ]] || continue
+  name=$(basename "$p"); repo="$PROJECTS_DIR/$name"
+  if [[ ! -d "$repo/.git" ]]; then echo "skip: $repo is not a git checkout"; continue; fi
+  if [[ -f "$p/CLAUDE.local.md" ]]; then link "${p}CLAUDE.local.md" "$repo/CLAUDE.local.md"; fi
+  mkdir -p "$repo/.git/info"
+  for f in CLAUDE.local.md .claude/settings.local.json .worktrees/; do
+    append_once "$repo/.git/info/exclude" "$f"
+  done
+done
+
+step "done"
+echo "Restart any open Claude sessions so hooks and settings load. Plugins install on first launch."
