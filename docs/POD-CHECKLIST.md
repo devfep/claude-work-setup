@@ -9,10 +9,12 @@ Type each line by hand in the pod; the expected result is after the arrow.
    WORKSPACE_MODE), then re-run.
 3. `bash ~/ebs/projects/claude-work-setup/bootstrap.sh` → "done"; note any `warn:` lines (tools
    the mirror does not serve).
-3a. For `rtk`: set `RTK_VENDORED_REPO` in the overlay to your vendored clone's git URL, then
-    `toolchain list --json | grep -i rust` and `toolchain install rust <1.91 or newer>` and
-    `toolchain activate rust@<version>`; confirm `cargo --version`; re-run bootstrap. The first
-    build takes several minutes; later runs skip it because `~/ebs/tools/bin/rtk` exists.
+3a. For `rtk`: set `RTK_VENDORED_REPO` in the overlay to your vendored clone's git URL. Rust
+    comes from the platform's `rustup-init` (on PATH; the managed `toolchain install rustup`
+    entry installs nothing, and release downloads from GitHub are refused): run `rustup-init`,
+    accept the defaults, open a new shell, confirm `cargo --version` is 1.91 or newer, then
+    re-run bootstrap. The first build takes several minutes; later runs skip it because
+    `~/ebs/tools/bin/rtk` exists. After a workspace rebuild, run `rustup-init` again first.
 4. `source ~/ebs/.shellrc && uv --version && prek --version && shellcheck --version | head -2 &&
    cdp doctor` → versions print; doctor shows Chrome.
 5. `DEVSPACE_CLAUDE_LAUNCH=1 /usr/local/libexec/claude-real plugin list` → superpowers,
