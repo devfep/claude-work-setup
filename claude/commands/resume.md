@@ -17,10 +17,10 @@ rebuild. Do these in order, without asking.
 4. `ListAgents`. For every lane the table lists as live: if listed, `SendMessage` it "resend your
    last full report and current commit sha"; never re-dispatch a live lane. If gone, its branch
    holds the work: finish from there with one fresh lane briefed from the table row.
-5. Continue the standing loop from the numbered next actions: implementer report → reviewer
-   re-runs the gate → fix passes back to the SAME lane → re-check by the SAME reviewer → on Yes,
-   PR opened (never merged) → roadmap box closed with the PR link → worktree reclaimed → STATE
-   rewritten.
+5. Continue the standing loop from the numbered next actions: implementer report with its draft
+   PR → reviewer re-runs the gate → fix passes back to the SAME lane → re-check by the SAME
+   reviewer → on Yes, you run `gh pr ready` on the draft PR (never merge) → roadmap box closed
+   with the PR link → worktree reclaimed → STATE rewritten.
 6. Standing rules: one implementer and one reviewer at a time, one test suite in flight; every
    task on `feature/<JIRA>-<slug>`; commit and push after every task; evidence into
    `programmes/$ARGUMENTS/verify/<JIRA>/`; a question only Felix can answer goes to Pending from

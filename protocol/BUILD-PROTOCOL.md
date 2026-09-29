@@ -34,16 +34,17 @@ Services, jobs and internal tools are judged on four things.
 ## 2. The three roles per task
 
 - **Orchestrator.** Reads the ROADMAP, picks and dispatches tasks (`/dispatch`), owns the STATE
-  block and BOARD.json, relays reviewer findings to the implementer, opens the PR after the
-  reviewer's Yes, and closes the roadmap box with the PR link. It never writes product code and
-  never merges.
+  block and BOARD.json, relays reviewer findings to the implementer, marks the implementer's
+  draft PR ready for the team (`gh pr ready`) after the reviewer's Yes, and closes the roadmap box
+  with the PR link. It never writes product code and never merges.
 - **Implementer.** Owns one task in one worktree on `feature/<JIRA>-<slug>`. Shows the Verify
   line red, makes it green, runs every gate for its stack (§ 3), saves the evidence, commits and
-  pushes after every green gate, and reports in the format of § 5.
-- **Reviewer.** A separate fresh agent in its own worktree of the lane's branch. Re-runs the
+  pushes after every green gate, opens the PR as a draft (G7, `gh pr create --draft`), and
+  reports in the format of § 5.
+- **Reviewer.** A separate fresh agent in its own worktree of the draft PR's branch. Re-runs the
   whole gate row independently (§ 3.4), performs the hand mutation (§ 3.5), checks the feature
   map against the app, and answers Yes or No with findings as file:line references. It does not
-  fix what it finds; the fixes go back to the implementer.
+  fix what it finds and never changes the PR's state; the fixes go back to the implementer.
 
 ## 3. The verification gate
 
@@ -65,11 +66,11 @@ plus, where named, files. No completion claim without the command output. "It co
 | G4 run evidence | the repo's `verify-<repo>` skill: Launch, Doctor, Drive every entry point the feature-map file lists for the change, Evidence (screenshot, accessibility snapshot, console, network, side effects), Cleanup; zero failed requests | `spring-boot:run` (local profile); actuator health plus each changed endpoint curled; responses saved | job run on a fixture input; output diffed against expected | `terraform show` of the plan lists only the intended resources | n/a |
 | G5 Verify line | passes, output saved | same | same | same | same |
 | G6 mutation spot-check | stryker on the changed module if mirrored | PIT on the changed package | mutmut on the changed module | n/a | n/a |
-| G7 PR | `gh pr create` from `feature/<JIRA>-<slug>` into the base branch; body written with `technical-writing`: Done line, gate summary, evidence path | same | same | same | same |
+| G7 draft PR | implementer: `gh pr create --draft` from `feature/<JIRA>-<slug>` into the base branch; body written with `technical-writing`: Done line, gate summary, evidence path. Orchestrator: `gh pr ready` after the reviewer's Yes | same | same | same | same |
 
 "Working" = G4 and G5 pass. "Done" = every gate passes, the reviewer has re-run the whole row
-independently and answered Yes, the PR is open, and the roadmap box is closed with the PR link.
-Merging is the team's act.
+independently and answered Yes, the orchestrator has marked the draft PR ready, and the roadmap
+box is closed with the PR link. Merging is the team's act.
 
 ### 3.1 Verification skills and the feature map
 
@@ -139,7 +140,8 @@ whose red was a crash, and a fallback `a ?? b` whose tests cover only one arm.
   that cover the change.
 - Branch name `feature/<JIRA>-<slug>`; commit subjects start with the JIRA key and are written
   with `technical-writing`; push after every green gate; never touch `develop`, `master`,
-  `release*`.
+  `release*`. Open the PR as a draft at G7 and never mark it ready; that is the orchestrator's
+  step after the reviewer's Yes.
 - One suite at a time; no background monitors; report when done or blocked, never idle.
 - Red first: show the Verify line failing before the change, with the failing test's own name in
   the log.
@@ -158,6 +160,7 @@ Reports carry command output, not summaries. A claim without its output is treat
 ```
 TASK-<id> <JIRA> — done | blocked
 Branch: feature/<JIRA>-<slug> @ <sha> (pushed: yes/no)
+PR:     <url> (draft, opened by this lane at G7; "not opened" while blocked)
 Red:    <Verify command> → <failing output, with the test's own name>
 Green:  <Verify command> → <passing output>
 Gates:
@@ -173,6 +176,7 @@ Blocked on: <the failing gate, its three outputs, or "—">
 
 ```
 REVIEW TASK-<id> <JIRA> @ <sha> — Yes | No
+PR: <url> (still draft; on Yes the orchestrator runs gh pr ready)
 Gates re-run: G1 … G7, each pass/fail with the reviewer's own evidence path
 Hand mutation: <file:line mutated> → <test name> red (log <path>); restore proven by
   git diff --exit-code <path>
