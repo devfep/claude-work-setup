@@ -1,0 +1,7 @@
+# Force LF everywhere: a checkout under core.autocrlf=true breaks every bash script.
+* text=auto eol=lf
+*.sh text eol=lf
+*.mjs text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.tmpl text eol=lf
