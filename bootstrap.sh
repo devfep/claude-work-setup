@@ -93,7 +93,8 @@ install_tools() {
   else
     echo "warn: no PyPI index known (overlay PYPI_INDEX_URL empty, pip config has none)"
   fi
-  if [[ -z "${SSL_CERT_FILE:-}" && -n "${NODE_EXTRA_CA_CERTS:-}" && -f "$NODE_EXTRA_CA_CERTS" ]]; then
+  if [[ -z "${SSL_CERT_FILE:-}" && -n "${NODE_EXTRA_CA_CERTS:-}" \
+        && -f "$NODE_EXTRA_CA_CERTS" ]]; then
     export SSL_CERT_FILE="$NODE_EXTRA_CA_CERTS"
     echo "uv CA: $SSL_CERT_FILE"
   fi
