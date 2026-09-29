@@ -18,7 +18,7 @@ in_workflow_repo() {
 
 # is_git_subcommand <name-or-ERE-group> <cmd>: true if cmd runs `git <name>` at a command boundary.
 # A boundary is line start or ; & | ( followed by optional VAR=value prefixes. Global options
-# before the subcommand may take a value (`-c http.proxy=…`, `-C dir`), as the pod's git form does.
+# before the subcommand may take a value (`-c http.proxy=…`, `-C dir`), as the pod's git does.
 is_git_subcommand() {
   local start='(^|[;&|(])[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*'
   local opts='([[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+|-[^[:space:]]+))*'

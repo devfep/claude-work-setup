@@ -10,5 +10,14 @@ for t in "$ROOT"/tests/hooks/*.sh "$ROOT"/tests/*_test.sh; do
 done
 mapfile -t scripts < <(find "$ROOT" -name '*.sh' -not -path '*/.git/*' | sort)
 shellcheck -S warning "${scripts[@]}" && echo "PASS shellcheck (${#scripts[@]} scripts)" || fail=1
-for s in "${scripts[@]}"; do [[ -x "$s" || "$s" == */lib.sh ]] || { echo "FAIL not executable: $s"; fail=1; }; done
+for s in "${scripts[@]}"; do
+  [[ -x "$s" || "$s" == */lib.sh ]] || { echo "FAIL not executable: $s"; fail=1; }
+done
+long=$(awk 'length > 100 { print FILENAME ":" FNR }' "${scripts[@]}")
+if [[ -z "$long" ]]; then
+  echo "PASS line length"
+else
+  echo "FAIL over 100 chars: $long"
+  fail=1
+fi
 exit $fail

@@ -28,8 +28,10 @@ assert_hook $h 0 "$(bash_json 'git commit -F msg-ok.txt')" '-F ok'
 assert_hook $h 2 "$(bash_json 'git commit -F msg-bad.txt')" '-F bad'
 
 ov=$(mktemp); echo "JIRA_KEY_REGEX='[A-Z]{2}[0-9]{3}'" >"$ov"
-CLAUDE_WORK_OVERLAY=$ov assert_hook $h 0 "$(bash_json 'git commit -m "AB123 custom"')" 'overlay regex ok'
-CLAUDE_WORK_OVERLAY=$ov assert_hook $h 2 "$(bash_json 'git commit -m "ABC-123 default no longer ok"')" 'overlay regex rejects'
+export CLAUDE_WORK_OVERLAY=$ov
+assert_hook $h 0 "$(bash_json 'git commit -m "AB123 custom"')" 'overlay regex ok'
+assert_hook $h 2 "$(bash_json 'git commit -m "ABC-123 default rejected"')" 'overlay regex rejects'
+export CLAUDE_WORK_OVERLAY=/nonexistent
 
 mkdir -p .claude && touch .claude/workflow-repo
 assert_hook $h 0 "$(bash_json 'git commit -m "Checkpoint state"')" 'workflow repo exempt'
